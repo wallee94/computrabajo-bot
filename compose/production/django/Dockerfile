@@ -15,9 +15,9 @@ COPY ./requirements.txt /requirements.txt
 RUN pip install --no-cache-dir -r /requirements.txt \
     && rm -f /requirements.txt
 
-COPY ./compose/production/django/daphne.sh /daphne.sh
+COPY ./compose/production/django/gunicorn.sh /gunicorn.sh
 RUN sed -i 's/\r//' /gunicorn.sh
-RUN chmod +x /daphne.sh
+RUN chmod +x /gunicorn.sh
 
 COPY ./compose/local/django/celery/worker.sh /worker.sh
 RUN sed -i 's/\r//' /worker.sh
