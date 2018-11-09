@@ -21,7 +21,7 @@ def send_email(email, text):
     :return:
     """
     data = {
-        "from": "Excited User <mailgun@%s>" % settings.MAILGUN_DOMAIN,
+        "from": "Computrabajo Bot <mailgun@%s>" % settings.MAILGUN_DOMAIN,
         "to": [email],
         "subject": "Resultados Computrabajo Bot",
         "text": text
@@ -73,19 +73,21 @@ def process_request(data) -> None:
     validate_200(res)
 
     # search for jobs using query and params
+    post_codes = set()
     url = search_url_template % (city, query)
-    params = {
-        'pubdate': pub_date_delta,
-        'q': query,
-        'sal': salary
-    }
-    res = s.get(url, params=params)
-    validate_200(res)
-
-    post_codes = re.findall(post_regex, res.text)
-    urls_need_form = []
+    for page in range(settings.COMPUTRABAJO_PAGES_TO_CRAWL):
+        params = {
+            'pubdate': pub_date_delta,
+            'q': query,
+            'sal': salary,
+            'p': page + 1
+        }
+        res = s.get(url, params=params)
+        validate_200(res)
+        post_codes |= set(re.findall(post_regex, res.text))
 
     # post applications
+    urls_need_form = []
     for pc in post_codes:
         url = apply_url_template % pc
         res = s.get(url)

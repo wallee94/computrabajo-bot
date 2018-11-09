@@ -124,3 +124,4 @@ USE_L10N = True
 USE_TZ = True
 
 COMPUTRABAJO_PROFILE_URL = 'https://candidato.computrabajo.com.mx/Candidate/Match/'
+COMPUTRABAJO_PAGES_TO_CRAWL = env.int('COMPUTRABAJO_PAGES_TO_CRAWL', default=2)
