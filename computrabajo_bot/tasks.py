@@ -1,7 +1,8 @@
 import re
 
 import requests
-from django.conf import settings as s
+from django.conf import settings
+
 from computrabajo_bot.celery import app
 from computrabajo_bot.utils import catch_exceptions, ComputrabajoStatusCodeError
 
@@ -20,13 +21,13 @@ def send_email(email, text):
     :return:
     """
     data = {
-        "from": "Excited User <mailgun@YOUR_DOMAIN_NAME>",
+        "from": "Excited User <mailgun@%s>" % settings.MAILGUN_DOMAIN,
         "to": [email],
         "subject": "Resultados Computrabajo Bot",
         "text": text
     }
-    url = "https://api.mailgun.net/v3/%s/messages" % s.MAILGUN_DOMAIN
-    requests.post(url, auth=("api", s.MAILGUN_PRIV_API_KEY), data=data)
+    url = "https://api.mailgun.net/v3/%s/messages" % settings.MAILGUN_DOMAIN
+    requests.post(url, auth=("api", settings.MAILGUN_PRIV_API_KEY), data=data)
 
 
 @app.task
@@ -35,8 +36,6 @@ def process_request(data) -> None:
     """
     login using computrabajo creds, query for positions and apply the request user to all of them
     """
-    # username = 'jogoyot@moruzza.com'
-    # password = 'p455w0rd'
     username = data['username']
     password = data['password']
     query = data.get('query')
@@ -97,9 +96,24 @@ def process_request(data) -> None:
                 urls_need_form.append(res.url)
 
             else:
-                return send_email(username, '')
+                text = (
+                    'Encontramos un problema mientras intentábamos postularte a todas las vacantes\n'
+                    'Es probable que computrabajo haya detectado actividad inusual y te pida que resuelvas un captcha '
+                    'para seguir postulándote.\n'
+                    'Por favor aplica a esta vacante [%s] o a cualquier otra y vuelve a intentar correr el bot.'
+                ) % res.url
+                return send_email(username, text)
 
     if urls_need_form:
-        return send_email(username, '')
+        text = (
+            'Logramos postularte a la mayoría de las vacantes, pero una o más requieren que respondas un formulario '
+            'hecho por la empresa. A continuación enlistamos los urls de con los formualrios para postularte: \n'
+        )
+        text += '\n'.join(urls_need_form)
+        return send_email(username, text)
 
-    send_email(username, '')
+    text = (
+        'Logramos postularte exitosamente a las vacantes. Puedes ver más información sobre tus postulaciones en tu '
+        'perfil, siguiendo este url: %s'
+    ) % settings.COMPUTRABAJO_PROFILE_URL
+    send_email(username, text)
