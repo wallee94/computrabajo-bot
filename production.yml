@@ -2,8 +2,6 @@ version: '2'
 
 volumes:
   caddy: {}
-  static: {}
-  media: {}
 
 services:
   django:
@@ -12,8 +10,6 @@ services:
       dockerfile: ./compose/production/django/Dockerfile
     volumes:
       - .:/app
-      - static:/app/static/eatbots
-      - media:/app/media
     env_file:
       - ./.envs/.production/.django
     command: /gunicorn.sh
@@ -41,9 +37,6 @@ services:
       - django
     volumes:
       - caddy:/root/.caddy
-      - static:/srv/static/eatbots
-      - media:/srv/media/api
-      - ./media/default:/srv/media/api/default
     env_file:
       - ./.envs/.production/.caddy
     ports:

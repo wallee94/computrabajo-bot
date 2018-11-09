@@ -4,5 +4,4 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-python /app/manage.py collectstatic --noinput
-gunicorn 0.0.0.0 -p 5000 computrabajo_bot.asgi:application
+/usr/local/bin/gunicorn computrabajo_bot.wsgi -b 0.0.0.0:5000 --chdir=/app
