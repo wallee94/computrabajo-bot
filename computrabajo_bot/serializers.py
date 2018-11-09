@@ -35,6 +35,7 @@ class ComputrabajoSerializer(ser.Serializer):
         "veracruz-de-ignacio-de-la-llave",
         "yucatan",
         "zacatecas",
+        "jornada-desde-casa",
     ]
     pub_choices = [7, 15, 30]
     salary_choices = [n for n in range(1, 7)]
