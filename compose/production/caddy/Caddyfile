@@ -1,0 +1,14 @@
+{$DOMAIN_NAME} {
+    redir https://www.{$DOMAIN_NAME}{path}
+}
+www.{$DOMAIN_NAME} {
+    root /srv
+    proxy /api django:5000 {
+        header_upstream Host {host}
+        header_upstream X-Real-IP {remote}
+        header_upstream X-Forwarded-Proto {scheme}
+    }
+    log stdout
+    errors stdout
+    gzip
+}

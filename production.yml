@@ -1,0 +1,51 @@
+version: '2'
+
+volumes:
+  caddy: {}
+  static: {}
+  media: {}
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    volumes:
+      - .:/app
+      - static:/app/static/eatbots
+      - media:/app/media
+    env_file:
+      - ./.envs/.production/.django
+    command: /gunicorn.sh
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./compose/production/django/Dockerfile
+    depends_on:
+      - django
+    volumes:
+      - .:/app
+    env_file:
+      - ./.envs/.production/.django
+    command: /worker.sh
+
+  rabbitmq:
+    image: rabbitmq:3.7
+
+  caddy:
+    build:
+      context: .
+      dockerfile: ./compose/production/caddy/Dockerfile
+    depends_on:
+      - django
+    volumes:
+      - caddy:/root/.caddy
+      - static:/srv/static/eatbots
+      - media:/srv/media/api
+      - ./media/default:/srv/media/api/default
+    env_file:
+      - ./.envs/.production/.caddy
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"

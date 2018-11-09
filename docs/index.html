@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css"
+          integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+    <link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
+    <title>Computrabajo Bot</title>
+    <style>
+        .card {
+            margin: 5% auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            max-width: 700px;
+        }
+
+        .msg {
+            color: #992222;
+        }
+
+        .footer {
+            color: #444;
+            text-align: center;
+            font-size: 0.8em;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .description {
+            text-align: left;
+            color: #111;
+            font-size: 0.9em;
+            max-width: 550px;
+            margin: 0 auto;
+        }
+
+        .m-l-20 {
+            margin-left: 20px;
+        }
+
+        select {
+            width: 250px;
+        }
+
+        form {
+            margin: 0 auto;
+        }
+
+        body {
+            background: #eee;
+        }
+
+        @media screen and (min-width: 35.5em) {
+            form {
+                width: 500px;
+            }
+
+            .card {
+                min-width: 568px;
+                width: 40%;
+
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="card" id="app">
+    <div class="header">
+        <h1>Computrabajo Bot</h1>
+        <div class="description">
+            <p>
+                Computrabajo Bot inicia sesión en <a href="https://www.computrabajo.com.mx/">computrabajo.com.mx</a>
+                y te postula automáticamente a todas las vacantes que cumplan con los parámetros de consulta que
+                escribas en la forma de abajo, con un máximo de 30 postulaciones.
+            </p>
+            <p>
+                El servicio enviará un email sencillo indicando el número de postulaciones exitosamente enviadas.
+                Podrás ver y administrar tus postulaciones desde
+                <a href="https://candidato.computrabajo.com.mx/Candidate/Match/">tu perfil</a>
+            </p>
+        </div>
+    </div>
+    <form class="pure-form pure-form-aligned" onsubmit="return false;" @submit="sendData">
+        <fieldset>
+            <div class="pure-control-group">
+                <label for="email">Correo electrónico</label>
+                <input id="email" type="email" placeholder="Correo electrónico" v-model="form.username" required>
+            </div>
+
+            <div class="pure-control-group">
+                <label for="password">Contraseña</label>
+                <input id="password" type="password" placeholder="Contraseña" v-model="form.password" required>
+            </div>
+
+            <div class="pure-control-group">
+                <label for="query">Palabras clave</label>
+                <input id="query" type=text placeholder="'contador', por ejemplo" v-model="form.query" required>
+            </div>
+
+            <div class="pure-control-group">
+                <label for="state">Estado</label>
+                <select name="state" id="state" v-model="form.state">
+                    <option :value="s.value" v-for="s in states" :key="s.value">
+                        {{ s.text }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="pure-control-group">
+                <label for="salary">Salario</label>
+                <select name="salary" id="salary" v-model="form.salary">
+                    <option :value="s.value" v-for="s in salaryOptions" :key="s.value">
+                        {{ s.text }}
+                    </option>
+                </select>
+            </div>
+
+            <div class="pure-control-group">
+                <label for="pub">Fecha de publicación</label>
+                <select name="pub" id="pub" v-model="form.pub">
+                    <option :value="p" v-for="p in pubOptions" :key="p">
+                        Últimos {{ p }} días
+                    </option>
+                </select>
+            </div>
+            <p class="msg" v-if="msg">{{ msg }}</p>
+            <div class="pure-controls">
+                <button type="submit" class="pure-button pure-button-primary">Enviar</button>
+            </div>
+        </fieldset>
+    </form>
+    <div class="footer">
+        <p>
+            El servidor no almacena en disco duro ningún dato que se le envíe. Algunos datos referentes al usuario, como
+            cookies de sesión de computrabajo son almacenadas temporalmente solo mientras las postulaciones se realizan.
+        </p>
+        <p>
+            Este es un proyecto de código abierto que puedes descargar en github.
+        </p>
+        <a href="" class="s-icon">
+            <i class="fa fa-github"></i> Github
+        </a>
+        <a href="https://www.linkedin.com/in/walthere-lee/" class="s-icon m-l-20">
+            <i class="fa fa-linkedin"></i> Linkedin
+        </a>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-resource@1.5.1"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        http: {},
+        data: {
+            msg: null,
+            pubOptions: [7, 15, 30],
+            states: [{
+                value: "ciudad-de-mexico",
+                text: "Ciudad de México DF"
+            }, {
+                value: "aguascalientes",
+                text: "Aguascalientes"
+            }, {
+                value: "baja-california",
+                text: "Baja California"
+            }, {
+                value: "baja-california-sur",
+                text: "Baja California Sur"
+            }, {
+                value: "campeche",
+                text: "Campeche"
+            }, {
+                value: "coahuila-de-zaragoza",
+                text: "Coahuila"
+            }, {
+                value: "colima",
+                text: "Colima"
+            }, {
+                value: "chiapas",
+                text: "Chiapas"
+            }, {
+                value: "chihuahua",
+                text: "Chihuahua"
+            }, {
+                value: "durango",
+                text: "Durango"
+            }, {
+                value: "guanajuato",
+                text: "Guanajuato"
+            }, {
+                value: "guerrero",
+                text: "Guerrero"
+            }, {
+                value: "hidalgo", text: "Hidalgo"
+            }, {
+                value: "jalisco",
+                text: "Jalisco"
+            }, {
+                value: "estado-de-mexico",
+                text: "Estado de México"
+            }, {
+                value: "michoacan-de-ocampo",
+                text: "Michoacán"
+            }, {
+                value: "morelos",
+                text: "Morelos"
+            }, {
+                value: "nayarit", text: "Nayarit"
+            }, {
+                value: "nuevo-leon",
+                text: "Nuevo León"
+            }, {
+                value: "oaxaca",
+                text: "Oaxaca"
+            }, {
+                value: "puebla",
+                text: "Puebla"
+            }, {
+                value: "queretaro",
+                text: "Querétaro"
+            }, {
+                value: "quintana-roo",
+                text: "Quintana Roo"
+            }, {
+                value: "san-luis-potosi",
+                text: "San Luis Potosí"
+            }, {
+                value: "sinaloa",
+                text: "Sinaloa"
+            }, {
+                value: "sonora",
+                text: "Sonora"
+            }, {
+                value: "tabasco",
+                text: "Tabasco"
+            }, {
+                value: "tamaulipas", text: "Tamaulipas"
+            }, {
+                value: "tlaxcala",
+                text: "Tlaxcala"
+            }, {
+                value: "veracruz-de-ignacio-de-la-llave",
+                text: "Veracruz"
+            }, {
+                value: "yucatan",
+                text: "Yucatán"
+            }, {
+                value: "zacatecas",
+                text: "Zacatecas"
+            }],
+            salaryOptions: [{
+                value: 1,
+                text: 'Menos de $5,000'
+            }, {
+                value: 2,
+                text: 'Más de $5,000'
+            }, {
+                value: 3,
+                text: 'Más de $10,000'
+            }, {
+                value: 4,
+                text: 'Más de $15,000'
+            }, {
+                value: 5,
+                text: 'Más de $20,000'
+            }, {
+                value: 6,
+                text: 'Más de $30,000'
+            }],
+            form: {
+                username: null,
+                password: null,
+                state: null,
+                query: null,
+                pub: null,
+                salary: null
+            }
+        },
+        methods: {
+            sendData: function () {
+                this.msg = null;
+                var self = this;
+                this.$http.post('/api/computrabajo/', this.form).then(function (res) {
+                    self.msg = 'Recibirás un correo con la información de tus postulaciones en unos segundos.'
+                }, function (res) {
+                    self.msg = 'Recibirás un correo con la información de tus postulaciones en unos segundos.'
+                });
+            }
+        }
+    });
+</script>
+</body>
+</html>

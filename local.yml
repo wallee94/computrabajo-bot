@@ -1,0 +1,30 @@
+version: '2'
+
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    volumes:
+      - .:/app
+    env_file:
+      - ./.envs/.local/.django
+    ports:
+      - "127.0.0.1:8000:8000"
+    command: /start.sh
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./compose/local/django/Dockerfile
+    depends_on:
+      - django
+      - rabbitmq
+    volumes:
+      - .:/app
+    env_file:
+      - ./.envs/.local/.django
+    command: /worker.sh
+
+  rabbitmq:
+    image: rabbitmq:3.7

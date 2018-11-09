@@ -1,0 +1,10 @@
+**/__pycache__
+**/migrations
+*.pyc
+*.orig
+*.ipynb
+*.sqlite3
+.idea/
+.envs/.production
+venv/
+.ipynb_checkpoints/
