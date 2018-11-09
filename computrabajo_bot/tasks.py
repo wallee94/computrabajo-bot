@@ -97,9 +97,9 @@ def process_request(data) -> None:
 
             else:
                 text = (
-                    'Encontramos un problema mientras intentábamos postularte a todas las vacantes\n'
+                    'Encontramos un problema mientras intentábamos postularte a todas las vacantes\r\n'
                     'Es probable que computrabajo haya detectado actividad inusual y te pida que resuelvas un captcha '
-                    'para seguir postulándote.\n'
+                    'para seguir postulándote.\r\n'
                     'Por favor aplica a esta vacante [%s] o a cualquier otra y vuelve a intentar correr el bot.'
                 ) % res.url
                 return send_email(username, text)
@@ -107,9 +107,9 @@ def process_request(data) -> None:
     if urls_need_form:
         text = (
             'Logramos postularte a la mayoría de las vacantes, pero una o más requieren que respondas un formulario '
-            'hecho por la empresa. A continuación enlistamos los urls de con los formualrios para postularte: \n'
+            'hecho por la empresa. A continuación enlistamos los urls con los formularios para postularte: \r\n'
         )
-        text += '\n'.join(urls_need_form)
+        text += '\r\n'.join(urls_need_form)
         return send_email(username, text)
 
     text = (
