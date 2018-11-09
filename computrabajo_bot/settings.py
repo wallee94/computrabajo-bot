@@ -20,7 +20,6 @@ ALLOWED_HOSTS = [env('DJANGO_ALLOWED_HOSTS', default='localhost')]
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
 ]
