@@ -11,14 +11,16 @@ env = environ.Env()
 SECRET_KEY = env('DJANGO_SECRET_KEY', default='any-secret-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env.bool('DJANGO_DEBUG', default=False)
+DEBUG = env.bool('DJANGO_DEBUG', default=True)
 
-ALLOWED_HOSTS = [env('DJANGO_ALLOWED_HOSTS', default='localhost')]
+ALLOWED_HOSTS = [env('DJANGO_ALLOWED_HOST', default='localhost')]
 
 
 # Application definition
 INSTALLED_APPS = [
+    'django.contrib.auth',
     'django.contrib.contenttypes',
+    'django.contrib.sessions',
     'django.contrib.messages',
     'rest_framework',
     'corsheaders',
