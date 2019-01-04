@@ -299,7 +299,8 @@
             sendData: function () {
                 this.msg = null;
                 var self = this;
-                this.$http.post('https://www.data-waiting.com/api/computrabajo/', this.form).then(function (res) {
+                var url = 'https://m5rw9w1z70.execute-api.us-west-2.amazonaws.com/default'
+                this.$http.post(url, this.form).then(function (res) {
                     self.msg = 'Recibirás un correo con la información de tus postulaciones en unos segundos.'
                 }, function (res) {
                     self.msg = 'Recibirás un correo con la información de tus postulaciones en unos segundos.'

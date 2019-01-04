@@ -1,9 +1,0 @@
-# General
-# ------------------------------------------------------------------------------
-USE_DOCKER=yes
-DJANGO_SETTINGS_MODULE=computrabajo_bot.settings
-DJANGO_DEBUG=true
-
-# Mailgun
-MAILGUN_PRIV_API_KEY=<mailgun-api-key>
-MAILGUN_DOMAIN=localhost

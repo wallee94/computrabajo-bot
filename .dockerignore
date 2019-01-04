@@ -1,4 +1,0 @@
-venv/
-.env/.production/
-.ipynb_checkpoints/
-*.ipynb

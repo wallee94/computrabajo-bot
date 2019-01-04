@@ -1,18 +1,23 @@
+import os
 import re
-
+import logging
 import requests
-from django.conf import settings
 
-from computrabajo_bot.celery import app
-from computrabajo_bot.utils import catch_exceptions, ComputrabajoStatusCodeError
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+MAILGUN_DOMAIN = os.environ.get('MAILGUN_DOMAIN')
+MAILGUN_PRIV_API_KEY = os.environ.get('MAILGUN_PRIV_API_KEY')
+COMPUTRABAJO_PROFILE_URL = 'https://candidato.computrabajo.com.mx/Candidate/Match/'
+COMPUTRABAJO_PAGES_TO_CRAWL = 2
 
 
 def validate_200(res) -> None:
     """
-    raise IOError if status_code != 200
+    raise ValueError if status_code != 200
     """
     if res.status_code != 200:
-        raise ComputrabajoStatusCodeError('Received status_code=[%d] from url=[%s]' % (res.status_code, res.url))
+        raise ValueError('Received status_code=[%d] from url=[%s]' % (res.status_code, res.url))
 
 
 def send_email(email, text):
@@ -21,17 +26,15 @@ def send_email(email, text):
     :return:
     """
     data = {
-        "from": "Computrabajo Bot <mailgun@%s>" % settings.MAILGUN_DOMAIN,
+        "from": "Computrabajo Bot <mailgun@%s>" % MAILGUN_DOMAIN,
         "to": [email],
         "subject": "Resultados Computrabajo Bot",
         "text": text
     }
-    url = "https://api.mailgun.net/v3/%s/messages" % settings.MAILGUN_DOMAIN
-    requests.post(url, auth=("api", settings.MAILGUN_PRIV_API_KEY), data=data)
+    url = "https://api.mailgun.net/v3/%s/messages" % MAILGUN_DOMAIN
+    requests.post(url, auth=("api", MAILGUN_PRIV_API_KEY), data=data)
 
 
-@app.task
-@catch_exceptions
 def process_request(data) -> None:
     """
     login using computrabajo creds, query for positions and apply the request user to all of them
@@ -46,7 +49,8 @@ def process_request(data) -> None:
 
     # urls
     login_url = 'https://www.computrabajo.com.mx/Ajax/checkLogin.ashx'
-    search_url_template = 'https://www.computrabajo.com.mx/empleos-en-%s?q=%s'
+    search_url = 'https://www.computrabajo.com.mx/ofertas-de-trabajo/'
+    search_url_template = 'https://www.computrabajo.com.mx/empleos-en-%s'
     apply_url_template = 'https://candidato.computrabajo.com.mx/match/?oi=%s&p=47&idb=2'
 
     # messages
@@ -63,6 +67,7 @@ def process_request(data) -> None:
         'rp': 0
     }
     res = s.post(url, data)
+    logger.info('status_code=[%d] received from [%s]', res.status_code, res.url)
     validate_200(res)
 
     url_param = res.json().get('url')
@@ -70,12 +75,17 @@ def process_request(data) -> None:
         raise IOError('Url param missing from POST %s response' % url)
 
     res = s.get(url_param)
+    logger.info('status_code=[%d] received from [%s]', res.status_code, res.url)
     validate_200(res)
+
+    if 'error' in res.text:
+        text = 'Las credenciales utilizadas no son válidas.\nPor favor inténtalo de nuevo.'
+        return send_email(username, text)
 
     # search for jobs using query and params
     post_codes = set()
-    url = search_url_template % (city, query)
-    for page in range(settings.COMPUTRABAJO_PAGES_TO_CRAWL):
+    url = search_url_template % city if city else search_url
+    for page in range(COMPUTRABAJO_PAGES_TO_CRAWL):
         params = {
             'pubdate': pub_date_delta,
             'q': query,
@@ -83,6 +93,7 @@ def process_request(data) -> None:
             'p': page + 1
         }
         res = s.get(url, params=params)
+        logger.info('status_code=[%d] received from [%s]', res.status_code, res.url)
         validate_200(res)
         post_codes |= set(re.findall(post_regex, res.text))
 
@@ -91,6 +102,7 @@ def process_request(data) -> None:
     for pc in post_codes:
         url = apply_url_template % pc
         res = s.get(url)
+        logger.info('status_code=[%d] received from [%s]', res.status_code, res.url)
         validate_200(res)
 
         if success_msg not in res.text and already_done_msg not in res.text:
@@ -117,5 +129,16 @@ def process_request(data) -> None:
     text = (
         'Logramos postularte exitosamente a las vacantes. Puedes ver más información sobre tus postulaciones en tu '
         'perfil, siguiendo este url: %s'
-    ) % settings.COMPUTRABAJO_PROFILE_URL
+    ) % COMPUTRABAJO_PROFILE_URL
     send_email(username, text)
+
+
+def lambda_handler(event, context):
+    if 'username' not in event:
+        return {'details': 'username is required'}
+
+    if 'password' not in event:
+        return {'details': 'password is required'}
+
+    process_request(event)
+    return {'details': 'email has been sent'}

@@ -8,3 +8,4 @@
 .envs/.production
 venv/
 .ipynb_checkpoints/
+*.zip
