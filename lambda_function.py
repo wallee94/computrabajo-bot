@@ -17,7 +17,9 @@ def validate_200(res) -> None:
     raise ValueError if status_code != 200
     """
     if res.status_code != 200:
-        raise ValueError('Received status_code=[%d] from url=[%s]' % (res.status_code, res.url))
+        raise ValueError(
+            'Received status_code=[%d] from url=[%s]' % (res.status_code, res.url)
+        )
 
 
 def send_email(email, text):
@@ -37,7 +39,8 @@ def send_email(email, text):
 
 def process_request(data) -> None:
     """
-    login using computrabajo creds, query for positions and apply the request user to all of them
+    login using computrabajo creds, query for positions and apply the request user
+    to all of them
     """
     username = data['username']
     password = data['password']
@@ -78,7 +81,7 @@ def process_request(data) -> None:
     logger.info('status_code=[%d] received from [%s]', res.status_code, res.url)
     validate_200(res)
 
-    if 'error' in res.text:
+    if 'Mejora tu perfil profesional' not in res.text:
         text = 'Las credenciales utilizadas no son válidas.\nPor favor inténtalo de nuevo.'
         return send_email(username, text)
 
@@ -111,24 +114,26 @@ def process_request(data) -> None:
 
             else:
                 text = (
-                    'Encontramos un problema mientras intentábamos postularte a todas las vacantes\r\n'
-                    'Es probable que computrabajo haya detectado actividad inusual y te pida que resuelvas un captcha '
-                    'para seguir postulándote.\r\n'
-                    'Por favor aplica a esta vacante [%s] o a cualquier otra y vuelve a intentar correr el bot.'
+                    'Encontramos un problema mientras intentábamos postularte a todas '
+                    'las vacantes\r\nEs probable que computrabajo haya detectado '
+                    'actividad inusual y te pida que resuelvas un captcha para seguir '
+                    'postulándote.\r\nPor favor aplica a esta vacante [%s] o a '
+                    'cualquier otra y vuelve a intentar correr el bot.'
                 ) % res.url
                 return send_email(username, text)
 
     if urls_need_form:
         text = (
-            'Logramos postularte a la mayoría de las vacantes, pero una o más requieren que respondas un formulario '
-            'hecho por la empresa. A continuación enlistamos los urls con los formularios para postularte: \r\n'
+            'Logramos postularte a la mayoría de las vacantes, pero una o más '
+            'requieren que respondas un formulario hecho por la empresa. A '
+            'continuación enlistamos los urls con los formularios para postularte: \r\n'
         )
         text += '\r\n'.join(urls_need_form)
         return send_email(username, text)
 
     text = (
-        'Logramos postularte exitosamente a las vacantes. Puedes ver más información sobre tus postulaciones en tu '
-        'perfil, siguiendo este url: %s'
+        'Logramos postularte exitosamente a las vacantes. Puedes ver más información '
+        'sobre tus postulaciones en tu perfil, siguiendo este url: %s'
     ) % COMPUTRABAJO_PROFILE_URL
     send_email(username, text)
 
